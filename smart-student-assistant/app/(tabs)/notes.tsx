@@ -1,12 +1,14 @@
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { View, Text, FlatList, StyleSheet, TextInput } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { getNotes, Note } from "../services/notesStorage";
-import { router } from "expo-router";
-
 
 export default function NotesScreen() {
-  const [notes, setNotes] = useState<Note[]>([]);
+  const router = useRouter();
+
+  const [allNotes, setAllNotes] = useState<Note[]>([]);
+  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
+  const [search, setSearch] = useState("");
 
   useFocusEffect(
     useCallback(() => {
@@ -15,30 +17,61 @@ export default function NotesScreen() {
   );
 
   const loadNotes = async () => {
-    const data = await getNotes();
-    setNotes(data);
+    const notes = await getNotes();
+    setAllNotes(notes);
+    setFilteredNotes(notes);
   };
 
-  return (
-    <View style={{ flex: 1, padding: 12 }}>
-      <Text style={styles.title}>📚 Your Notes</Text>
+  function onSearch(text: string) {
+    setSearch(text);
 
-      {notes.length === 0 ? (
-        <Text style={{ marginTop: 20 }}>No notes saved yet.</Text>
+    if (!text.trim()) {
+      setFilteredNotes(allNotes);
+      return;
+    }
+
+    const lower = text.toLowerCase();
+
+    const filtered = allNotes.filter(
+      (n) =>
+        n.topic.toLowerCase().includes(lower) ||
+        n.content.toLowerCase().includes(lower)
+    );
+
+    setFilteredNotes(filtered);
+  }
+
+  function openNote(note: Note) {
+    router.push(`/notes/${note.id}`);
+  }
+
+  return (
+    <View style={styles.container}>
+      {/* SEARCH BAR */}
+      <TextInput
+        placeholder="Search notes..."
+        value={search}
+        onChangeText={onSearch}
+        style={styles.search}
+      />
+
+      {/* NOTES LIST */}
+      {filteredNotes.length === 0 ? (
+        <Text style={styles.empty}>No notes found.</Text>
       ) : (
         <FlatList
-          data={notes}
+          data={filteredNotes}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <TouchableOpacity
-  style={styles.card}
-  onPress={() => router.push(`/notes/${item.id}`)}
->
+            <View style={styles.noteCard} onTouchEnd={() => openNote(item)}>
               <Text style={styles.topic}>{item.topic}</Text>
-              <Text numberOfLines={3} style={styles.preview}>
+              <Text style={styles.preview} numberOfLines={2}>
                 {item.content}
               </Text>
-            </TouchableOpacity>
+              <Text style={styles.date}>
+                {new Date(item.createdAt).toLocaleDateString()}
+              </Text>
+            </View>
           )}
         />
       )}
@@ -47,23 +80,45 @@ export default function NotesScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 10,
+  container: {
+    flex: 1,
+    padding: 16,
   },
-  card: {
+
+  search: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+  },
+
+  noteCard: {
     backgroundColor: "#f1f5f9",
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 10,
     marginBottom: 10,
   },
+
   topic: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 18,
+    fontWeight: "600",
   },
+
   preview: {
     marginTop: 4,
-    color: "#334155",
+    color: "#000000",
+  },
+
+  date: {
+    marginTop: 6,
+    fontSize: 12,
+    color: "#64748b",
+  },
+
+  empty: {
+    textAlign: "center",
+    marginTop: 40,
+    color: "#64748b",
   },
 });
