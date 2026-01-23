@@ -35,14 +35,15 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="planner"
-        options={{
-          title: "Planner",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" size={size} color={color} />
-          ),
-        }}
-      />
+  name="timetable-import"
+  options={{
+    title: "Timetable",
+    tabBarIcon: ({ color, size }) => (
+      <Ionicons name="calendar" size={size} color={color} />
+    ),
+  }}
+/>
+
     </Tabs>
   );
 }
