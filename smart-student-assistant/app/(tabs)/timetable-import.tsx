@@ -3,6 +3,8 @@ import { useState } from "react";
 import * as DocumentPicker from "expo-document-picker";
 import { parseTimetableWithGeminiVision } from "../services/timetableAI";
 import { saveTimetable } from "../services/timetableStorage";
+import { Colors, Shadows, Spacing, Typography } from "../../constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function TimetableImportScreen() {
   const [loading, setLoading] = useState(false);
@@ -45,14 +47,14 @@ export default function TimetableImportScreen() {
       const dayCount = Object.keys(structured).filter(
         (key) => Array.isArray(structured[key]) && structured[key].length > 0
       ).length;
-      
+
       const totalClasses = Object.values(structured).reduce(
-        (sum: number, day: any) => sum + (Array.isArray(day) ? day.length : 0), 
+        (sum: number, day: any) => sum + (Array.isArray(day) ? day.length : 0),
         0
       );
-      
+
       setStatus(`✅ Success! Found ${dayCount} days with ${totalClasses} total classes`);
-      
+
     } catch (err) {
       console.error("❌ Import Error:", err);
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
@@ -67,23 +69,25 @@ export default function TimetableImportScreen() {
       <Text style={styles.title}>📅 Import Timetable</Text>
 
       <View style={styles.infoBox}>
+        <Ionicons name="image-outline" size={24} color={Colors.light.primary} style={{ marginBottom: 8 }} />
         <Text style={styles.infoText}>
-          📸 Take a photo or select an image of your timetable
+          Take a photo or select an image to auto-import your schedule.
         </Text>
         <Text style={styles.infoSubtext}>
-          Works best with clear, well-lit images
+          Ensure the image is clear and well-lit for best results.
         </Text>
       </View>
 
       <TouchableOpacity style={styles.btn} onPress={pickFile} disabled={loading}>
+        <Ionicons name="cloud-upload-outline" size={20} color="white" style={{ marginRight: 8 }} />
         <Text style={styles.btnText}>
-          {loading ? "Processing..." : "📂 Select Timetable Image"}
+          {loading ? "Processing..." : "Select Timetable Image"}
         </Text>
       </TouchableOpacity>
 
       {loading && (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0ea5e9" />
+          <ActivityIndicator size="large" color={Colors.light.primary} />
           <Text style={styles.loadingText}>Analyzing with AI...</Text>
         </View>
       )}
@@ -94,7 +98,11 @@ export default function TimetableImportScreen() {
           status.startsWith("✅") && styles.successBox,
           status.startsWith("❌") && styles.errorBox
         ]}>
-          <Text style={styles.statusText}>{status}</Text>
+          <Text style={[
+            styles.statusText,
+            status.startsWith("✅") && styles.successText,
+            status.startsWith("❌") && styles.errorText
+          ]}>{status}</Text>
         </View>
       ) : null}
 
@@ -110,96 +118,104 @@ export default function TimetableImportScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#ffffff" },
-  title: { 
-    fontSize: 24, 
-    fontWeight: "bold", 
-    marginBottom: 16, 
-    textAlign: "center",
-    color: "#0f172a"
+  container: {
+    flex: 1,
+    padding: Spacing.m,
+    backgroundColor: Colors.light.background
+  },
+  title: {
+    ...Typography.header,
+    fontSize: 24,
+    marginBottom: Spacing.l,
+    marginTop: Spacing.m,
   },
   infoBox: {
-    backgroundColor: "#f0f9ff",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "#bae6fd",
+    backgroundColor: Colors.light.surface,
+    padding: Spacing.l,
+    borderRadius: 16,
+    marginBottom: Spacing.l,
+    alignItems: 'center',
+    ...Shadows.small,
   },
   infoText: {
-    fontSize: 15,
-    color: "#0c4a6e",
+    fontSize: 16,
+    color: Colors.light.text,
     fontWeight: "600",
     marginBottom: 4,
+    textAlign: 'center',
   },
   infoSubtext: {
-    fontSize: 13,
-    color: "#075985",
+    fontSize: 14,
+    color: Colors.light.textSecondary,
+    textAlign: 'center',
   },
   btn: {
-    backgroundColor: "#0ea5e9",
-    padding: 16,
+    backgroundColor: Colors.light.primary,
+    padding: Spacing.m,
     borderRadius: 12,
+    flexDirection: 'row',
     alignItems: "center",
-    elevation: 2,
-    shadowColor: "#0ea5e9",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    justifyContent: 'center',
+    ...Shadows.medium,
   },
-  btnText: { 
-    color: "#fff", 
-    fontWeight: "600", 
-    fontSize: 16 
+  btnText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16
   },
   loadingContainer: {
-    marginTop: 30,
+    marginTop: Spacing.l,
     alignItems: "center",
   },
   loadingText: {
-    marginTop: 12,
+    marginTop: Spacing.s,
     fontSize: 14,
-    color: "#64748b",
+    color: Colors.light.textSecondary,
   },
   statusBox: {
-    marginTop: 20,
-    padding: 16,
-    backgroundColor: "#f1f5f9",
+    marginTop: Spacing.l,
+    padding: Spacing.m,
+    backgroundColor: Colors.light.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#cbd5e1",
+    borderColor: Colors.light.border,
   },
   successBox: {
-    backgroundColor: "#f0fdf4",
-    borderColor: "#86efac",
+    backgroundColor: Colors.light.surface,
+    borderColor: Colors.light.success,
+    borderLeftWidth: 4,
   },
   errorBox: {
-    backgroundColor: "#fef2f2",
-    borderColor: "#fca5a5",
+    backgroundColor: Colors.light.surface,
+    borderColor: Colors.light.danger,
+    borderLeftWidth: 4,
   },
   statusText: {
     fontSize: 14,
-    color: "#0f172a",
-    textAlign: "center",
+    color: Colors.light.text,
     fontWeight: "500",
   },
+  successText: {
+    color: Colors.light.success,
+  },
+  errorText: {
+    color: Colors.light.danger,
+  },
   tipsBox: {
-    marginTop: 30,
-    padding: 16,
-    backgroundColor: "#fefce8",
+    marginTop: Spacing.xl,
+    padding: Spacing.m,
+    backgroundColor: Colors.light.gray100,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#fde047",
   },
   tipsTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#854d0e",
-    marginBottom: 8,
+    color: Colors.light.text,
+    marginBottom: Spacing.s,
   },
   tipText: {
     fontSize: 13,
-    color: "#a16207",
+    color: Colors.light.textSecondary,
     marginBottom: 4,
   },
 });

@@ -137,23 +137,23 @@ export default function ScanScreen() {
         </View>
       )}
       {aiText.length > 0 && (
-  <View style={{ position: "absolute", bottom: 90, width: "100%", alignItems: "center" }}>
-    <TouchableOpacity
-      style={[styles.scanButton, { backgroundColor: "#2563eb" }]}
-      onPress={async () => {
-        await saveNote({
-          id: Date.now().toString(),
-          topic: topic,
-          content: aiText,
-          createdAt: Date.now(),
-        });
-        alert("Note saved!");
-      }}
-    >
-      <Text style={styles.scanText}>💾 Save Note</Text>
-    </TouchableOpacity>
-  </View>
-)}
+        <View style={{ position: "absolute", bottom: 90, width: "100%", alignItems: "center" }}>
+          <TouchableOpacity
+            style={[styles.scanButton, { backgroundColor: "#2563eb" }]}
+            onPress={async () => {
+              await saveNote({
+                id: Date.now().toString(),
+                topic: topic,
+                content: aiText,
+                createdAt: Date.now(),
+              });
+              alert("Note saved!");
+            }}
+          >
+            <Text style={styles.scanText}>💾 Save Note</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
     </View>
   );

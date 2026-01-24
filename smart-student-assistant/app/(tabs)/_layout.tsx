@@ -1,9 +1,31 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { Colors } from "../../constants/theme";
+import { useColorScheme } from "react-native";
 
 export default function TabLayout() {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? "light"];
+
   return (
-    <Tabs>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: theme.tabIconSelected,
+        tabBarInactiveTintColor: theme.tabIconDefault,
+        tabBarStyle: {
+          backgroundColor: theme.surface,
+          borderTopWidth: 0,
+          elevation: 10,
+          shadowColor: "#000",
+          shadowOpacity: 0.1,
+          shadowRadius: 10,
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -19,8 +41,12 @@ export default function TabLayout() {
         options={{
           title: "Scan",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="camera" size={size} color={color} />
+            <Ionicons name="scan-circle" size={32} color={Colors.light.primary} />
           ),
+          tabBarLabelStyle: {
+            color: Colors.light.primary,
+            fontWeight: '600'
+          }
         }}
       />
 
@@ -35,25 +61,23 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-  name="timetable-import"
-  options={{
-    title: "Timetable",
-    tabBarIcon: ({ color, size }) => (
-      <Ionicons name="calendar" size={size} color={color} />
-    ),
-  }}
-/>
-<Tabs.Screen
-  name="daily-plan"
-  options={{
-    title: "Plan My Day",
-    tabBarIcon: ({ color, size }) => (
-      <Ionicons name="sparkles" size={size} color={color} />
-    ),
-  }}
-/>
-
-
+        name="timetable-import"
+        options={{
+          title: "Import",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="cloud-download" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="daily-plan"
+        options={{
+          title: "Plan",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="sparkles" size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
