@@ -1,98 +1,173 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import { useCallback, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { getTimetable, WeeklyTimetable } from "../services/timetableStorage";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+type ClassEntry = {
+  start: string;
+  end: string;
+  subject: string;
+};
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
+  const [todayClasses, setTodayClasses] = useState<ClassEntry[]>([]);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const todayName = new Date().toLocaleString("en-US", { weekday: "long" });
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [])
+  );
+
+  async function load() {
+    const table = await getTimetable();
+    if (!table) {
+      setTodayClasses([]);
+      return;
+    }
+
+    const classes = ((table as WeeklyTimetable)[todayName] || []) as ClassEntry[];
+    setTodayClasses(classes);
+  }
+
+  return (
+    <ScrollView style={styles.container}>
+      <Text style={styles.greeting}>👋 Hi Rohit</Text>
+      <Text style={styles.subtitle}>Let’s plan your day smartly.</Text>
+
+      {/* TODAY CLASSES */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>📅 Today ({todayName})</Text>
+
+        {todayClasses.length === 0 ? (
+          <Text style={{ color: "#64748b" }}>No classes today 🎉</Text>
+        ) : (
+          todayClasses.map((c, i) => (
+            <Text key={i} style={styles.classItem}>
+              • {c.start}-{c.end} {c.subject}
+            </Text>
+          ))
+        )}
+
+        <TouchableOpacity
+          style={styles.linkBtn}
+          onPress={() => router.push("/today")}
+        >
+          <Text style={styles.linkText}>View Full Today Schedule →</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* QUICK ACTIONS */}
+      <Text style={styles.sectionTitle}>⚡ Quick Actions</Text>
+
+      <View style={styles.grid}>
+        <ActionButton
+          title="📸 Scan Notes"
+          onPress={() => router.push("/scan")}
+        />
+
+        <ActionButton
+          title="📚 My Notes"
+          onPress={() => router.push("/(tabs)/notes")}
+        />
+
+        <ActionButton
+          title="📂 Import Timetable"
+          onPress={() => router.push("/(tabs)/timetable-import")}
+        />
+
+        <ActionButton
+          title="🧠 Plan My Day"
+          onPress={() => router.push("/(tabs)/daily-plan")}
+        />
+      </View>
+    </ScrollView>
+  );
+}
+
+function ActionButton({
+  title,
+  onPress,
+}: {
+  title: string;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity style={styles.actionBtn} onPress={onPress}>
+      <Text style={styles.actionText}>{title}</Text>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: "#f8fafc",
   },
-  stepContainer: {
-    gap: 8,
+
+  greeting: {
+    fontSize: 28,
+    fontWeight: "bold",
+  },
+
+  subtitle: {
+    color: "#64748b",
+    marginBottom: 16,
+  },
+
+  card: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 20,
+    elevation: 2,
+  },
+
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: "600",
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+
+  classItem: {
+    marginBottom: 4,
+  },
+
+  linkBtn: {
+    marginTop: 10,
+  },
+
+  linkText: {
+    color: "#2563eb",
+    fontWeight: "600",
+  },
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 10,
+  },
+
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+
+  actionBtn: {
+    backgroundColor: "#0ea5e9",
+    padding: 16,
+    borderRadius: 16,
+    width: "48%",
+    alignItems: "center",
+  },
+
+  actionText: {
+    color: "#fff",
+    fontWeight: "600",
+    textAlign: "center",
   },
 });

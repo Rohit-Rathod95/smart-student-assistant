@@ -43,6 +43,16 @@ export default function TabLayout() {
     ),
   }}
 />
+<Tabs.Screen
+  name="daily-plan"
+  options={{
+    title: "Plan My Day",
+    tabBarIcon: ({ color, size }) => (
+      <Ionicons name="sparkles" size={size} color={color} />
+    ),
+  }}
+/>
+
 
     </Tabs>
   );
