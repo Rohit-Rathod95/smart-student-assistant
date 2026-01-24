@@ -12,12 +12,31 @@ import { useFocusEffect } from "expo-router";
 import { getTimetable, WeeklyTimetable } from "../services/timetableStorage";
 import { getFreeSlots, getTotalFreeMinutes, formatDuration } from "../services/timeUtils";
 import { generateDailyPlan } from "../services/dailyPlannerAI";
+import {
+  Task,
+  saveTasks,
+  loadTasks,
+  clearTasks,
+} from "../services/dailyTasksStorage";
 
 type ClassEntry = {
   start: string;
   end: string;
   subject: string;
 };
+
+function parsePlanToTasks(planText: string): Task[] {
+  const lines = planText
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+
+  return lines.map((line, idx) => ({
+    id: Date.now().toString() + idx,
+    text: line.replace(/^[-•*⏰📚🍽️💪🎯✨]/g, "").trim(),
+    done: false,
+  }));
+}
 
 export default function DailyPlanScreen() {
   const [todayClasses, setTodayClasses] = useState<ClassEntry[]>([]);
@@ -27,13 +46,14 @@ export default function DailyPlanScreen() {
 
   const [goals, setGoals] = useState("");
   const [loading, setLoading] = useState(false);
-  const [plan, setPlan] = useState("");
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   const todayName = new Date().toLocaleString("en-US", { weekday: "long" });
 
   useFocusEffect(
     useCallback(() => {
       load();
+      loadSavedTasks();
     }, [dayStart, dayEnd])
   );
 
@@ -54,6 +74,11 @@ export default function DailyPlanScreen() {
     setFreeSlots(free);
   }
 
+  async function loadSavedTasks() {
+    const saved = await loadTasks();
+    setTasks(saved);
+  }
+
   async function generate() {
     if (!goals.trim()) {
       alert("Enter your goals for today");
@@ -61,10 +86,9 @@ export default function DailyPlanScreen() {
     }
 
     setLoading(true);
-    setPlan("");
 
     try {
-      const result = await generateDailyPlan({
+      const planText = await generateDailyPlan({
         today: todayName,
         classes: todayClasses,
         freeSlots,
@@ -73,15 +97,33 @@ export default function DailyPlanScreen() {
         dayEnd,
       });
 
-      setPlan(result);
+      const newTasks = parsePlanToTasks(planText);
+      setTasks(newTasks);
+      await saveTasks(newTasks);
     } catch (e) {
-      setPlan("❌ Failed to generate daily plan.");
+      alert("Failed to generate plan");
     } finally {
       setLoading(false);
     }
   }
 
+  async function toggleTask(id: string) {
+    const updated = tasks.map((t) =>
+      t.id === id ? { ...t, done: !t.done } : t
+    );
+    setTasks(updated);
+    await saveTasks(updated);
+  }
+
+  async function resetDay() {
+    await clearTasks();
+    setTasks([]);
+    setGoals("");
+  }
+
   const totalFreeTime = getTotalFreeMinutes(freeSlots);
+  const completedTasks = tasks.filter(t => t.done).length;
+  const totalTasks = tasks.length;
 
   return (
     <ScrollView style={styles.container}>
@@ -148,7 +190,7 @@ export default function DailyPlanScreen() {
 
       <Text style={styles.section}>🎯 Your Goals for Today:</Text>
       <TextInput
-        placeholder="e.g. Revise DBMS, Complete MPP report, Solve W&A numericals, Morning workout, Study for exam"
+        placeholder="e.g. Revise DBMS, Complete MPP report, Morning workout, Study for exam..."
         value={goals}
         onChangeText={setGoals}
         style={styles.input}
@@ -159,14 +201,52 @@ export default function DailyPlanScreen() {
         <Text style={styles.btnText}>🧠 Generate Complete Day Plan</Text>
       </TouchableOpacity>
 
-      {loading && <ActivityIndicator style={{ marginTop: 20 }} size="large" />}
+      {loading && <ActivityIndicator style={{ marginTop: 20 }} size="large" color="#7c3aed" />}
 
-      {plan ? (
-        <View style={styles.planBox}>
-          <Text style={styles.planTitle}>📋 Your Day Plan</Text>
-          <Text style={styles.planText}>{plan}</Text>
+      {/* TASK LIST */}
+      {tasks.length > 0 && (
+        <View style={styles.tasksBox}>
+          <View style={styles.taskHeader}>
+            <View>
+              <Text style={styles.taskHeaderTitle}>✅ Today's Tasks</Text>
+              <Text style={styles.progressText}>
+                {completedTasks}/{totalTasks} completed
+              </Text>
+            </View>
+            <TouchableOpacity onPress={resetDay} style={styles.resetBtn}>
+              <Text style={styles.resetText}>Reset Day</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Progress Bar */}
+          <View style={styles.progressBarContainer}>
+            <View 
+              style={[
+                styles.progressBarFill, 
+                { width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }
+              ]} 
+            />
+          </View>
+
+          {tasks.map((t) => (
+            <TouchableOpacity
+              key={t.id}
+              style={styles.taskRow}
+              onPress={() => toggleTask(t.id)}
+            >
+              <Text style={styles.checkbox}>{t.done ? "✅" : "⬜"}</Text>
+              <Text
+                style={[
+                  styles.taskText,
+                  t.done && { textDecorationLine: "line-through", color: "#94a3b8" },
+                ]}
+              >
+                {t.text}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
-      ) : null}
+      )}
     </ScrollView>
   );
 }
@@ -254,22 +334,77 @@ const styles = StyleSheet.create({
 
   btnText: { color: "#fff", fontWeight: "600", fontSize: 16 },
 
-  planBox: {
+  tasksBox: {
     marginTop: 20,
     marginBottom: 30,
     backgroundColor: "#f8fafc",
     padding: 16,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "#e2e8f0",
   },
 
-  planTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
+  taskHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
+  },
+
+  taskHeaderTitle: {
+    fontWeight: "600",
+    fontSize: 18,
     color: "#1e293b",
   },
 
-  planText: { fontSize: 15, lineHeight: 24, color: "#334155" },
+  progressText: {
+    fontSize: 12,
+    color: "#64748b",
+    marginTop: 2,
+  },
+
+  resetBtn: {
+    backgroundColor: "#fee2e2",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+
+  resetText: {
+    color: "#dc2626",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+
+  progressBarContainer: {
+    height: 8,
+    backgroundColor: "#e2e8f0",
+    borderRadius: 4,
+    overflow: "hidden",
+    marginBottom: 16,
+  },
+
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: "#7c3aed",
+    borderRadius: 4,
+  },
+
+  taskRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 6,
+    paddingVertical: 4,
+  },
+
+  checkbox: {
+    fontSize: 20,
+    marginRight: 10,
+  },
+
+  taskText: {
+    fontSize: 15,
+    flex: 1,
+    color: "#334155",
+  },
 });
