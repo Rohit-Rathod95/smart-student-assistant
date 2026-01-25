@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "expo-router";
@@ -18,6 +19,12 @@ import {
   loadTasks,
   clearTasks,
 } from "../services/dailyTasksStorage";
+import { Colors, Shadows, Spacing, Typography } from "../../constants/theme";
+import { Ionicons } from "@expo/vector-icons";
+import Animated, { FadeInDown, FadeInUp, Layout } from "react-native-reanimated";
+import { GradientBackground } from "../../components/ui/GradientBackground";
+import { Card } from "../../components/ui/Card";
+import { GradientButton } from "../../components/ui/GradientButton";
 
 type ClassEntry = {
   start: string;
@@ -126,285 +133,365 @@ export default function DailyPlanScreen() {
   const totalTasks = tasks.length;
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>🧠 AI Daily Planner</Text>
+    <GradientBackground>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 100 }}>
+        <Animated.View entering={FadeInDown.delay(100).springify()}>
+          <Text style={styles.title}>🧠 AI Daily Planner</Text>
+          <Text style={styles.sub}>Today is {todayName}</Text>
+        </Animated.View>
 
-      <Text style={styles.sub}>📅 Today: {todayName}</Text>
-
-      {/* Day Time Range */}
-      <View style={styles.timeRangeContainer}>
-        <Text style={styles.section}>⏰ Day Time Range:</Text>
-        <View style={styles.timeInputRow}>
-          <View style={styles.timeInputGroup}>
-            <Text style={styles.timeLabel}>Start:</Text>
-            <TextInput
-              value={dayStart}
-              onChangeText={setDayStart}
-              style={styles.timeInput}
-              placeholder="06:00"
-            />
-          </View>
-          <View style={styles.timeInputGroup}>
-            <Text style={styles.timeLabel}>End:</Text>
-            <TextInput
-              value={dayEnd}
-              onChangeText={setDayEnd}
-              style={styles.timeInput}
-              placeholder="23:00"
-            />
-          </View>
-        </View>
-      </View>
-
-      <Text style={styles.section}>📚 Today's Classes:</Text>
-      {todayClasses.length === 0 ? (
-        <Text style={styles.infoText}>No classes scheduled 🎉</Text>
-      ) : (
-        todayClasses.map((c, i) => (
-          <Text key={i} style={styles.listItem}>
-            • {c.start}-{c.end} {c.subject}
-          </Text>
-        ))
-      )}
-
-      <View style={styles.freeSlotsHeader}>
-        <Text style={styles.section}>⏳ Available Free Time:</Text>
-        <Text style={styles.totalTime}>{formatDuration(totalFreeTime)}</Text>
-      </View>
-      
-      {freeSlots.length === 0 ? (
-        <Text style={styles.infoText}>No free time available</Text>
-      ) : (
-        freeSlots.map((s, i) => {
-          const duration = formatDuration(
-            parseInt(s.end.split(":")[0]) * 60 + parseInt(s.end.split(":")[1]) -
-            (parseInt(s.start.split(":")[0]) * 60 + parseInt(s.start.split(":")[1]))
-          );
-          return (
-            <Text key={i} style={styles.listItem}>
-              • {s.start} - {s.end} ({duration})
-            </Text>
-          );
-        })
-      )}
-
-      <Text style={styles.section}>🎯 Your Goals for Today:</Text>
-      <TextInput
-        placeholder="e.g. Revise DBMS, Complete MPP report, Morning workout, Study for exam..."
-        value={goals}
-        onChangeText={setGoals}
-        style={styles.input}
-        multiline
-      />
-
-      <TouchableOpacity style={styles.btn} onPress={generate}>
-        <Text style={styles.btnText}>🧠 Generate Complete Day Plan</Text>
-      </TouchableOpacity>
-
-      {loading && <ActivityIndicator style={{ marginTop: 20 }} size="large" color="#7c3aed" />}
-
-      {/* TASK LIST */}
-      {tasks.length > 0 && (
-        <View style={styles.tasksBox}>
-          <View style={styles.taskHeader}>
-            <View>
-              <Text style={styles.taskHeaderTitle}>✅ Today's Tasks</Text>
-              <Text style={styles.progressText}>
-                {completedTasks}/{totalTasks} completed
-              </Text>
+        {/* SETUP SECTION */}
+        <Animated.View entering={FadeInDown.delay(200).springify()}>
+          <Card variant="elevated" style={styles.setupCard}>
+            <View style={styles.cardHeader}>
+              <View style={styles.iconWrapper}>
+                <Ionicons name="settings" size={22} color={Colors.light.primary} />
+              </View>
+              <Text style={styles.cardTitle}>Day Setup</Text>
             </View>
-            <TouchableOpacity onPress={resetDay} style={styles.resetBtn}>
-              <Text style={styles.resetText}>Reset Day</Text>
-            </TouchableOpacity>
-          </View>
 
-          {/* Progress Bar */}
-          <View style={styles.progressBarContainer}>
-            <View 
-              style={[
-                styles.progressBarFill, 
-                { width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }
-              ]} 
-            />
+        <View style={styles.timeRow}>
+          <View style={styles.timeGroup}>
+            <Text style={styles.label}>Start</Text>
+            <View style={styles.timeInputWrapper}>
+              <TextInput
+                value={dayStart}
+                onChangeText={setDayStart}
+                style={styles.timeInput}
+                placeholder="06:00"
+                keyboardType="numbers-and-punctuation"
+              />
+            </View>
           </View>
-
-          {tasks.map((t) => (
-            <TouchableOpacity
-              key={t.id}
-              style={styles.taskRow}
-              onPress={() => toggleTask(t.id)}
-            >
-              <Text style={styles.checkbox}>{t.done ? "✅" : "⬜"}</Text>
-              <Text
-                style={[
-                  styles.taskText,
-                  t.done && { textDecorationLine: "line-through", color: "#94a3b8" },
-                ]}
-              >
-                {t.text}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          <View style={styles.arrowContainer}>
+            <Ionicons name="arrow-forward" size={16} color={Colors.light.textLight} />
+          </View>
+          <View style={styles.timeGroup}>
+            <Text style={styles.label}>End</Text>
+            <View style={styles.timeInputWrapper}>
+              <TextInput
+                value={dayEnd}
+                onChangeText={setDayEnd}
+                style={styles.timeInput}
+                placeholder="23:00"
+                keyboardType="numbers-and-punctuation"
+              />
+            </View>
+          </View>
         </View>
-      )}
-    </ScrollView>
+
+            <View style={styles.divider} />
+
+            <View style={styles.statsRow}>
+              <View style={styles.stat}>
+                <Text style={styles.statValue}>{todayClasses.length}</Text>
+                <Text style={styles.statLabel}>Classes</Text>
+              </View>
+              <View style={styles.verticalDivider} />
+              <View style={styles.stat}>
+                <Text style={[styles.statValue, { color: Colors.light.success }]}>
+                  {formatDuration(totalFreeTime)}
+                </Text>
+                <Text style={styles.statLabel}>Free Time</Text>
+              </View>
+            </View>
+          </Card>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(300).springify()}>
+          <Text style={styles.sectionHeader}>🎯 Your Goals</Text>
+          <Card variant="outlined" style={styles.goalCard}>
+            <TextInput
+              placeholder="e.g. Revise DBMS, Morning workout..."
+              placeholderTextColor={Colors.light.textLight}
+              value={goals}
+              onChangeText={setGoals}
+              style={styles.goalInput}
+              multiline
+            />
+          </Card>
+
+          <GradientButton
+            title="Generate Plan"
+            icon="sparkles"
+            onPress={generate}
+            loading={loading}
+            disabled={loading}
+            variant="primary"
+            style={styles.generateBtn}
+          />
+        </Animated.View>
+
+        {/* TASK LIST */}
+        {tasks.length > 0 && (
+          <Animated.View entering={FadeInUp.delay(400).springify()} layout={Layout.springify()}>
+            <Card variant="elevated" style={styles.tasksCard}>
+              <View style={styles.tasksHeader}>
+                <View>
+                  <Text style={styles.tasksTitle}>✅ Today's Plan</Text>
+                  <Text style={styles.tasksSub}>
+                    {completedTasks} of {totalTasks} completed
+                  </Text>
+                </View>
+                <TouchableOpacity style={styles.resetBtn} onPress={resetDay} activeOpacity={0.7}>
+                  <Ionicons name="refresh" size={14} color={Colors.light.danger} />
+                  <Text style={styles.resetText}>Reset</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.progressTrack}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    { width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }
+                  ]}
+                />
+              </View>
+
+              <View style={styles.taskList}>
+                {tasks.map((t, index) => (
+                  <TouchableOpacity
+                    key={t.id}
+                    style={[styles.taskRow, t.done && styles.taskRowDone]}
+                    onPress={() => toggleTask(t.id)}
+                    activeOpacity={0.7}
+                  >
+                    <Animated.View
+                      entering={FadeInDown.delay(index * 50).springify()}
+                      layout={Layout.springify()}
+                      style={styles.taskContent}
+                    >
+                      <View style={[styles.checkbox, t.done && styles.checkboxDone]}>
+                        {t.done && <Ionicons name="checkmark" size={14} color="white" />}
+                      </View>
+                      <Text style={[styles.taskText, t.done && styles.taskTextDone]}>
+                        {t.text}
+                      </Text>
+                    </Animated.View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </Card>
+          </Animated.View>
+        )}
+      </ScrollView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: "#fff" },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 10 },
-  sub: { color: "#64748b", marginBottom: 12, fontSize: 16 },
-
-  timeRangeContainer: {
-    backgroundColor: "#f8fafc",
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 16,
-  },
-
-  timeInputRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 8,
-  },
-
-  timeInputGroup: {
+  container: {
     flex: 1,
-    marginHorizontal: 4,
+    padding: Spacing.m,
   },
-
-  timeLabel: {
-    fontSize: 14,
-    color: "#64748b",
+  title: {
+    ...Typography.header,
+    fontSize: 30,
     marginBottom: 4,
+    marginTop: Spacing.xl,
+    letterSpacing: -0.8,
   },
-
-  timeInput: {
-    borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 8,
-    padding: 10,
+  sub: {
+    ...Typography.body,
     fontSize: 16,
-    backgroundColor: "#fff",
+    color: Colors.light.textSecondary,
+    marginBottom: Spacing.l,
   },
-
-  section: { marginTop: 12, fontWeight: "600", fontSize: 16 },
-
-  freeSlotsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  setupCard: {
+    marginBottom: Spacing.l,
   },
-
-  totalTime: {
-    color: "#7c3aed",
-    fontWeight: "600",
-    fontSize: 16,
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.s,
+    marginBottom: Spacing.m,
   },
-
-  infoText: {
-    color: "#94a3b8",
-    fontStyle: "italic",
-    marginTop: 4,
+  iconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.light.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-
-  listItem: {
-    marginTop: 4,
-    color: "#334155",
-  },
-
-  input: {
-    borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 8,
-    minHeight: 100,
-    fontSize: 15,
-  },
-
-  btn: {
-    backgroundColor: "#7c3aed",
-    padding: 14,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 16,
-  },
-
-  btnText: { color: "#fff", fontWeight: "600", fontSize: 16 },
-
-  tasksBox: {
-    marginTop: 20,
-    marginBottom: 30,
-    backgroundColor: "#f8fafc",
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-  },
-
-  taskHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-
-  taskHeaderTitle: {
-    fontWeight: "600",
+  cardTitle: {
+    ...Typography.subheader,
     fontSize: 18,
-    color: "#1e293b",
+    fontWeight: '700',
   },
-
-  progressText: {
+  timeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  timeGroup: {
+    flex: 1,
+  },
+  label: {
     fontSize: 12,
-    color: "#64748b",
-    marginTop: 2,
+    color: Colors.light.textLight,
+    marginBottom: 6,
+    fontWeight: "600",
   },
-
+  timeInputWrapper: {
+    backgroundColor: Colors.light.background,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  timeInput: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: Colors.light.text,
+    textAlign: 'center',
+  },
+  arrowContainer: {
+    paddingHorizontal: 10,
+    paddingTop: 16,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.light.border,
+    marginVertical: Spacing.m,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  stat: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: Colors.light.text,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: Colors.light.textSecondary,
+    fontWeight: '500',
+  },
+  verticalDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: Colors.light.border,
+  },
+  sectionHeader: {
+    ...Typography.subheader,
+    marginBottom: Spacing.m,
+    color: Colors.light.text,
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  goalCard: {
+    marginBottom: Spacing.l,
+  },
+  goalInput: {
+    minHeight: 120,
+    fontSize: 16,
+    color: Colors.light.text,
+    textAlignVertical: 'top',
+    lineHeight: 24,
+  },
+  generateBtn: {
+    marginBottom: Spacing.xl,
+  },
+  tasksCard: {
+    marginTop: Spacing.m,
+  },
+  tasksHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: Spacing.m,
+  },
+  tasksTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: Colors.light.text,
+    letterSpacing: -0.3,
+  },
+  tasksSub: {
+    fontSize: 14,
+    color: Colors.light.textSecondary,
+    marginTop: 4,
+    fontWeight: '500',
+  },
   resetBtn: {
-    backgroundColor: "#fee2e2",
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.light.danger + '15',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: 10,
   },
-
   resetText: {
-    color: "#dc2626",
-    fontWeight: "600",
-    fontSize: 14,
+    color: Colors.light.danger,
+    fontSize: 12,
+    fontWeight: '700',
   },
-
-  progressBarContainer: {
+  progressTrack: {
     height: 8,
-    backgroundColor: "#e2e8f0",
+    backgroundColor: Colors.light.border,
     borderRadius: 4,
-    overflow: "hidden",
-    marginBottom: 16,
+    marginBottom: Spacing.l,
+    overflow: 'hidden',
   },
-
-  progressBarFill: {
-    height: "100%",
-    backgroundColor: "#7c3aed",
+  progressFill: {
+    height: '100%',
+    backgroundColor: Colors.light.success,
     borderRadius: 4,
   },
-
+  taskList: {
+    gap: Spacing.m,
+  },
   taskRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 6,
-    paddingVertical: 4,
+    backgroundColor: Colors.light.surfaceAlt,
+    padding: Spacing.m,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    ...Shadows.small,
   },
-
+  taskRowDone: {
+    backgroundColor: Colors.light.background,
+    borderColor: Colors.light.border,
+    opacity: 0.6,
+    elevation: 0,
+  },
+  taskContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.m,
+  },
   checkbox: {
-    fontSize: 20,
-    marginRight: 10,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 2.5,
+    borderColor: Colors.light.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
   },
-
+  checkboxDone: {
+    backgroundColor: Colors.light.success,
+    borderColor: Colors.light.success,
+  },
   taskText: {
-    fontSize: 15,
+    fontSize: 16,
+    color: Colors.light.text,
     flex: 1,
-    color: "#334155",
+    lineHeight: 24,
+    fontWeight: '500',
+  },
+  taskTextDone: {
+    color: Colors.light.textLight,
+    textDecorationLine: 'line-through',
   },
 });

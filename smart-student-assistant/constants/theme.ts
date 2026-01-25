@@ -1,27 +1,40 @@
-
 import { Platform, ViewStyle, TextStyle } from 'react-native';
 
 const Palette = {
-  primary: '#6366f1', // Indigo 500
-  primaryDark: '#4f46e5', // Indigo 600
-  primaryLight: '#818cf8', // Indigo 400
+  // Vibrant & Friendly Primary (Blue-Purple Gradient base)
+  primary: '#4F46E5',     // Indigo 600
+  primaryLight: '#818CF8', // Indigo 400
+  primaryDark: '#4338CA',  // Indigo 700
 
-  secondary: '#14b8a6', // Teal 500
-  secondaryDark: '#0d9488', // Teal 600
+  // Fresh & Motivating Secondary (Teal/Emerald)
+  secondary: '#10B981',    // Emerald 500
+  secondaryLight: '#34D399', // Emerald 400
+  secondaryDark: '#059669', // Emerald 600
 
-  background: '#f8fafc', // Slate 50
-  surface: '#ffffff',
+  // Accent (Warm/Playful - Orange/Yellow)
+  accent: '#F59E0B',      // Amber 500
+  accentLight: '#FBBF24', // Amber 400
 
-  text: '#1e293b', // Slate 800
-  textSecondary: '#64748b', // Slate 500
-  textLight: '#94a3b8', // Slate 400
+  // Backgrounds - Move away from stark white
+  background: '#F0F5FF',   // Very light cool blue tint
+  surface: '#FFFFFF',
+  surfaceAlt: '#F8FAFC',   // Slate 50 (for secondary cards)
 
-  success: '#10b981',
-  warning: '#f59e0b',
-  danger: '#ef4444',
+  // Text
+  text: '#1E293B',        // Slate 800 (High contrast)
+  textSecondary: '#64748B', // Slate 500 (Medium contrast)
+  textLight: '#94A3B8',   // Slate 400 (Low contrast/icons)
 
-  gray100: '#f1f5f9',
-  gray200: '#e2e8f0',
+  // System
+  success: '#10B981',
+  warning: '#F59E0B',
+  danger: '#EF4444',
+  info: '#3B82F6',
+
+  // Grays for borders/dividers
+  border: '#E2E8F0',      // Slate 200
+  gray100: '#F1F5F9',
+  gray200: '#E2E8F0',
 };
 
 export const Colors = {
@@ -31,42 +44,72 @@ export const Colors = {
     textLight: Palette.textLight,
     background: Palette.background,
     surface: Palette.surface,
-    tint: Palette.primary,
+    surfaceAlt: Palette.surfaceAlt,
+
+    primary: Palette.primary,
+    primaryLight: Palette.primaryLight,
+    primaryDark: Palette.primaryDark,
+
+    secondary: Palette.secondary,
+    secondaryLight: Palette.secondaryLight,
+    secondaryDark: Palette.secondaryDark,
+
+    accent: Palette.accent,
+
+    border: Palette.border,
     icon: Palette.textSecondary,
+
     tabIconDefault: Palette.textLight,
     tabIconSelected: Palette.primary,
-    border: Palette.gray200,
-    primary: Palette.primary,
-    primaryDark: Palette.primaryDark,
-    secondary: Palette.secondary,
-    secondaryDark: Palette.secondaryDark,
+
+    success: Palette.success,
     danger: Palette.danger,
     warning: Palette.warning,
-    success: Palette.success,
+    info: Palette.info,
+
+    // Specific UI colors
+    cardBackground: Palette.surface,
+    screenBackground: Palette.background,
+
     gray100: Palette.gray100,
     gray200: Palette.gray200,
   },
   dark: {
-    text: '#f8fafc',
-    textSecondary: '#cbd5e1',
-    textLight: '#94a3b8',
-    background: '#0f172a',
-    surface: '#1e293b',
-    tint: Palette.primaryLight,
-    icon: '#94a3b8',
-    tabIconDefault: '#64748b',
-    tabIconSelected: Palette.primaryLight,
-    border: '#334155',
+    // Keeping a placeholder darker mode, but focusing on Light mode polish as requested
+    text: '#F8FAFC',
+    textSecondary: '#94A3B8',
+    textLight: '#64748B',
+    background: '#0F172A',
+    surface: '#1E293B',
+    surfaceAlt: '#334155',
     primary: Palette.primaryLight,
-    primaryDark: Palette.primary,
     secondary: Palette.secondary,
-    secondaryDark: Palette.secondaryDark,
-    danger: '#f87171',
-    warning: '#fbbf24',
-    success: '#34d399',
+    accent: Palette.accent,
+    border: '#334155',
+    icon: '#94A3B8',
+    tabIconDefault: '#64748B',
+    tabIconSelected: Palette.primaryLight,
+    success: '#34D399',
+    danger: '#F87171',
+    warning: '#FBBF24',
+    info: '#60A5FA',
+    cardBackground: '#1E293B',
+    screenBackground: '#0F172A',
     gray100: '#1e293b',
     gray200: '#334155',
   },
+};
+
+export const Gradients = {
+  primary: [Palette.primary, '#6366F1'] as const, // Indigo 600 -> Indigo 500
+  primaryPurple: [Palette.primary, '#8B5CF6'] as const, // Indigo -> Purple
+  secondary: [Palette.secondary, '#34D399'] as const, // Emerald 500 -> 400
+  warm: [Palette.accent, '#FCD34D'] as const, // Amber 500 -> 300
+  card: ['#FFFFFF', '#F8FAFC'] as const,
+  background: ['#F0F5FF', '#E0E7FF', '#F5F3FF'] as const, // Soft blue-purple gradient
+  backgroundAlt: ['#F8FAFC', '#F1F5F9'] as const, // Neutral gradient
+  success: [Palette.secondary, '#34D399'] as const,
+  accent: [Palette.accent, '#FCD34D'] as const,
 };
 
 export const Spacing = {
@@ -75,67 +118,82 @@ export const Spacing = {
   m: 16,
   l: 24,
   xl: 32,
+  xxl: 48,
 };
 
 export const Shadows = {
   small: {
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.18,
-    shadowRadius: 1.00,
-    elevation: 1,
-  } as ViewStyle,
+    shadowColor: "#64748B", // Slate 500 shadow
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
   medium: {
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 3, // Android
-  } as ViewStyle,
+    shadowColor: "#6366F1", // Indigo tinted shadow
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 4,
+  },
   large: {
-    shadowColor: "#6366f1", // Tinted shadow
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.20,
-    shadowRadius: 8,
+    shadowColor: "#4338CA", // Deep Indigo shadow
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
     elevation: 8,
-  } as ViewStyle,
+  },
+  float: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
+  }
 };
 
 export const Typography = {
   header: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: '800', // Extra bold
     color: Palette.text,
+    letterSpacing: -0.5,
   } as TextStyle,
   subheader: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
     color: Palette.text,
+    letterSpacing: -0.5,
   } as TextStyle,
   body: {
     fontSize: 16,
     color: Palette.textSecondary,
     lineHeight: 24,
+    fontWeight: '400',
   } as TextStyle,
   caption: {
-    fontSize: 12,
+    fontSize: 13,
     color: Palette.textLight,
+    fontWeight: '500',
   } as TextStyle,
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Palette.textSecondary,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  } as TextStyle
 };
 
 export const Layout = {
   card: {
     backgroundColor: Palette.surface,
-    borderRadius: 16,
+    borderRadius: 24, // More rounded
     padding: Spacing.m,
   } as ViewStyle,
+  screenContainer: {
+    flex: 1,
+    backgroundColor: Palette.background,
+    padding: Spacing.m,
+  } as ViewStyle
 };
