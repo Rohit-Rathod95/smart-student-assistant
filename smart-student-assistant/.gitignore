@@ -3,7 +3,7 @@
 # dependencies
 node_modules/
 .env
-
+google-services.json
 # Expo
 .expo/
 dist/
