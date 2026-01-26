@@ -139,6 +139,6 @@ This app works **offline-first** and uses **AI (Gemini)** to understand notes, t
 - Helps in revision and productivity
 ---
 ## 👨‍💻 Author
-## Rohit Rathod
-## 3rd Year Engineering Student
-## Full Stack / Backend / Mobile Developer
+### Rohit Rathod
+- 3rd Year Engineering Student
+- Full Stack / Backend / Mobile Developer
